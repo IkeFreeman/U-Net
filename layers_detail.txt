@@ -1,0 +1,179 @@
+# U-Net Architecture Detailed Description
+
+## Input Layer
+- Input Size: (256, 256, 3)
+- Purpose: Accepts RGB images of size 256x256 pixels
+
+## Encoder Path (Contracting Path)
+
+### Encoder Block 1
+1. First Convolution:
+   - Filters: 64
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+2. Second Convolution:
+   - Filters: 64
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+3. Max Pooling:
+   - Pool Size: 2x2
+   - Output Size: (128, 128, 64)
+
+### Encoder Block 2
+1. First Convolution:
+   - Filters: 128
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+2. Second Convolution:
+   - Filters: 128
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+3. Max Pooling:
+   - Pool Size: 2x2
+   - Output Size: (64, 64, 128)
+
+### Encoder Block 3
+1. First Convolution:
+   - Filters: 256
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+2. Second Convolution:
+   - Filters: 256
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+3. Max Pooling:
+   - Pool Size: 2x2
+   - Output Size: (32, 32, 256)
+
+### Encoder Block 4
+1. First Convolution:
+   - Filters: 512
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+2. Second Convolution:
+   - Filters: 512
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+3. Max Pooling:
+   - Pool Size: 2x2
+   - Output Size: (16, 16, 512)
+
+## Bridge (Bottleneck)
+1. First Convolution:
+   - Filters: 1024
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+2. Second Convolution:
+   - Filters: 1024
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+   - Output Size: (16, 16, 1024)
+
+## Decoder Path (Expanding Path)
+
+### Decoder Block 1
+1. Upsampling:
+   - Size: 2x2
+   - Output: (32, 32, 1024)
+2. Convolution:
+   - Filters: 512
+   - Kernel Size: 2x2
+   - Activation: ReLU
+   - Padding: Same
+3. Concatenation with Encoder Block 4 Skip Connection
+4. Two Convolutions:
+   - Filters: 512
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+   - Output Size: (32, 32, 512)
+
+### Decoder Block 2
+1. Upsampling:
+   - Size: 2x2
+   - Output: (64, 64, 512)
+2. Convolution:
+   - Filters: 256
+   - Kernel Size: 2x2
+   - Activation: ReLU
+   - Padding: Same
+3. Concatenation with Encoder Block 3 Skip Connection
+4. Two Convolutions:
+   - Filters: 256
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+   - Output Size: (64, 64, 256)
+
+### Decoder Block 3
+1. Upsampling:
+   - Size: 2x2
+   - Output: (128, 128, 256)
+2. Convolution:
+   - Filters: 128
+   - Kernel Size: 2x2
+   - Activation: ReLU
+   - Padding: Same
+3. Concatenation with Encoder Block 2 Skip Connection
+4. Two Convolutions:
+   - Filters: 128
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+   - Output Size: (128, 128, 128)
+
+### Decoder Block 4
+1. Upsampling:
+   - Size: 2x2
+   - Output: (256, 256, 128)
+2. Convolution:
+   - Filters: 64
+   - Kernel Size: 2x2
+   - Activation: ReLU
+   - Padding: Same
+3. Concatenation with Encoder Block 1 Skip Connection
+4. Two Convolutions:
+   - Filters: 64
+   - Kernel Size: 3x3
+   - Activation: ReLU
+   - Padding: Same
+   - Output Size: (256, 256, 64)
+
+## Output Layer
+- Convolution:
+  - Filters: 1 (for binary segmentation)
+  - Kernel Size: 1x1
+  - Activation: Sigmoid
+  - Output Size: (256, 256, 1)
+
+## Model Compilation
+- Optimizer: Adam
+  - Learning Rate: 1e-4
+- Loss Function: Binary Crossentropy
+- Metrics: 
+  - Accuracy
+  - Mean IoU (with 2 classes)
+
+## Key Features
+1. Symmetric Architecture: The encoder and decoder paths are symmetric, with 4 blocks each
+2. Skip Connections: Each decoder block receives feature maps from the corresponding encoder block
+3. Feature Maps: The number of filters doubles at each encoder step (64→128→256→512→1024)
+4. Padding: All convolutions use 'same' padding to maintain spatial dimensions
+5. Deep Supervision: The model uses skip connections to combine low-level and high-level features
+6. Binary Segmentation: The output layer uses sigmoid activation for binary mask prediction
+
+## Architecture Benefits
+- The contracting path captures context
+- The expanding path enables precise localization
+- Skip connections help recover spatial information lost during downsampling
+- The symmetric structure allows for efficient feature extraction and reconstruction
